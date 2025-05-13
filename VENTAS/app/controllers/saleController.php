@@ -1079,34 +1079,34 @@
 
 		    return json_encode($alerta);
 		}
-		
-			public function obtenerDatosVentasTotalesPorMes()
-	{
-		$sql = "SELECT venta_fecha, venta_total FROM venta";
-		$ventas = $this->ejecutarConsulta($sql);
-
-		$ventasPorMes = [];
-
-		while ($row = $ventas->fetch(\PDO::FETCH_ASSOC)) {
-			$mes = date("F", strtotime($row['venta_fecha']));
-			$total = (float) $row['venta_total'];
-
-			if (!isset($ventasPorMes[$mes])) {
-				$ventasPorMes[$mes] = 0;
-			}
-
-			$ventasPorMes[$mes] += $total;
-		}
-
-		ksort($ventasPorMes); // Ordena alfabéticamente (podemos ordenar cronológicamente si quieres)
-
-		return [
-			"meses" => array_keys($ventasPorMes),
-			"totales" => array_values($ventasPorMes)
-		];
-	}
 
 		
-		
+public function obtenerDatosVentasTotalesPorMes()
+{
+    $sql = "SELECT venta_fecha, venta_total FROM venta";
+    $ventas = $this->ejecutarConsulta($sql);
+
+    $ventasPorMes = [];
+
+    while ($row = $ventas->fetch(\PDO::FETCH_ASSOC)) {
+        $mes = date("F", strtotime($row['venta_fecha']));
+        $total = (float) $row['venta_total'];
+
+        if (!isset($ventasPorMes[$mes])) {
+            $ventasPorMes[$mes] = 0;
+        }
+
+        $ventasPorMes[$mes] += $total;
+    }
+
+    ksort($ventasPorMes); // Ordena alfabéticamente (podemos ordenar cronológicamente si quieres)
+
+    return [
+        "meses" => array_keys($ventasPorMes),
+        "totales" => array_values($ventasPorMes)
+    ];
+}
+
+
 }
 	
