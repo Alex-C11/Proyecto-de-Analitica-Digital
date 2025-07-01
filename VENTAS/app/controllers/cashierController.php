@@ -492,4 +492,52 @@
 			return json_encode($alerta);
 		}
 
+
+		public function resumenCajasPorDiaControlador() {
+    $consulta = "
+        SELECT 
+            c.caja_nombre,
+            DATE(v.venta_fecha) AS fecha,
+            SUM(v.venta_total) AS total_ganado
+        FROM venta v
+        INNER JOIN caja c ON v.caja_id = c.caja_id
+        GROUP BY c.caja_id, DATE(v.venta_fecha)
+        ORDER BY fecha DESC, c.caja_nombre ASC
+    ";
+
+    $resultados = $this->ejecutarConsulta($consulta)->fetchAll();
+
+    $tabla = '<div class="table-container">
+                <table class="table is-bordered is-striped is-narrow is-hoverable is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th class="has-text-centered">Fecha</th>
+                            <th class="has-text-centered">Caja</th>
+                            <th class="has-text-centered">Total Ganado (S/)</th>
+                        </tr>
+                    </thead>
+                    <tbody>';
+
+    if (count($resultados) > 0) {
+        foreach ($resultados as $row) {
+            $tabla .= '
+                <tr class="has-text-centered">
+                    <td>' . $row['fecha'] . '</td>
+                    <td>' . $row['caja_nombre'] . '</td>
+                    <td>' . number_format($row['total_ganado'], 2, '.', ',') . '</td>
+                </tr>';
+        }
+    } else {
+        $tabla .= '
+            <tr class="has-text-centered">
+                <td colspan="3">No hay ventas registradas aún</td>
+            </tr>';
+    }
+
+    $tabla .= '</tbody></table></div>';
+    return $tabla;
+}
+
+
+
 	}

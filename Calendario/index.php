@@ -265,27 +265,30 @@ $(document).ready(function() {
 		selectable: true,
 		selectHelper: false,
 
-		select: function(start, end) {
-			$("#exampleModal").modal();
-			$("input[name=fecha_inicio]").val(start.format('DD-MM-YYYY'));
-			var valorFechaFin = end.format("DD-MM-YYYY");
-			var F_final = moment(valorFechaFin, "DD-MM-YYYY").subtract(1, 'days').format('DD-MM-YYYY');
-			$('input[name=fecha_fin]').val(F_final);  
-		},
+		  select: function(start, end){
+      $("#exampleModal").modal();
+      $("input[name=fecha_inicio]").val(start.format('DD-MM-YYYY'));
+       
+      var valorFechaFin = end.format("DD-MM-YYYY");
+      var F_final = moment(valorFechaFin, "DD-MM-YYYY").subtract(1, 'days').format('DD-MM-YYYY'); //Le resto 1 dia
+      $('input[name=fecha_fin').val(F_final);  
 
-		events: [
-			<?php while($dataEvento = mysqli_fetch_array($resulEventos)){ ?>
-				{
-					_id: '<?php echo $dataEvento['id']; ?>',
-					title: '<?php echo $dataEvento['evento']; ?>',
-					start: '<?php echo $dataEvento['fecha_inicio']; ?>',
-					end: '<?php echo $dataEvento['fecha_fin']; ?>',
-					color: '<?php echo $dataEvento['color_evento']; ?>'
-				},
-			<?php } ?>
-		],
+    },
+      
+    events: [
+      <?php
+       while($dataEvento = mysqli_fetch_array($resulEventos)){ ?>
+          {
+          _id: '<?php echo $dataEvento['id']; ?>',
+          title: '<?php echo $dataEvento['evento']; ?>',
+          start: '<?php echo $dataEvento['fecha_inicio']; ?>',
+          end:   '<?php echo $dataEvento['fecha_fin']; ?>',
+          color: '<?php echo $dataEvento['color_evento']; ?>'
+          },
+        <?php } ?>
+    ],
 
-		eventRender: function(event, element) {
+	eventRender: function(event, element) {
 			element.find(".fc-content").prepend("<span class='closeon material-icons'>&#xe5cd;</span>");
 			element.find(".closeon").on("click", function() {
 				if (confirm("¿Deseas borrar este evento?")) {

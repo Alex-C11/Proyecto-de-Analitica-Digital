@@ -1,3 +1,33 @@
+<?php
+use app\controllers\productController;
+$insProducto = new productController();
+?>
+
+
+<?php if ($insProducto->hayProductosCriticos()): ?>
+  <div class="modal is-active" id="modalInventarioCritico">
+    <div class="modal-background"></div>
+    <div class="modal-card">
+      
+      <header class="modal-card-head has-background-danger-dark">
+        <p class="modal-card-title has-text-white">⚠ Inventario Crítico</p>
+      </header>
+
+      <section class="modal-card-body">
+        <h4 class="subtitle"><i class="fas fa-exclamation-circle"></i> Productos faltantes o con stock mínimo</h4>
+        <?php
+          $pagina = isset($_GET['page']) ? $_GET['page'] : 1;
+          echo $insProducto->listarNombresStockCriticoPaginado($pagina, 4, "dashboard"); // usa tu vista aquí
+        ?>
+      </section>
+
+      <footer class="modal-card-foot" style="justify-content: flex-end;">
+        <button class="button is-danger">Aceptar</button>
+      </footer>
+    </div>
+  </div>
+<?php endif; ?>
+
 <div class="container is-fluid">
 
 	<h1 class="title">Home</h1>
@@ -81,6 +111,5 @@
 			</nav>
 		</div>
 	</div>
-	
 
 

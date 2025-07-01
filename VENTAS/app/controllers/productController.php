@@ -1109,4 +1109,206 @@
 
 			return json_encode($alerta);
 		}
+
+/*----------  Controlador: listar productos con stock 0 o 1  ----------*/
+public function listarProductoStockMinimoControlador($pagina,$registros,$url){
+
+    /* ─── parámetros y sanitización idénticos ─── */
+    $pagina     = $this->limpiarCadena($pagina);
+    $registros  = $this->limpiarCadena($registros);
+    $url        = APP_URL.$this->limpiarCadena($url)."/";
+
+    $pagina     = (isset($pagina) && $pagina>0) ? (int)$pagina : 1;
+    $inicio     = ($pagina>0) ? (($pagina*$registros)-$registros) : 0;
+
+    $campos = "p.producto_id,
+               p.producto_codigo,
+               p.producto_nombre,
+               p.producto_stock_total,
+               p.producto_precio_venta,
+               p.producto_foto,
+               c.categoria_nombre";
+
+    /* === Cambia el filtro: stock_total <= 1  === */
+    $consulta_datos = "SELECT $campos
+                       FROM producto p
+                       INNER JOIN categoria c ON p.categoria_id = c.categoria_id
+                       WHERE p.producto_stock_total <= 1
+                       ORDER BY p.producto_nombre ASC
+                       LIMIT $inicio, $registros";
+
+    $consulta_total = "SELECT COUNT(producto_id)
+                       FROM producto
+                       WHERE producto_stock_total <= 1";
+
+    $datos  = $this->ejecutarConsulta($consulta_datos)->fetchAll();
+    $total  = (int)$this->ejecutarConsulta($consulta_total)->fetchColumn();
+    $numeroPaginas = ceil($total / $registros);
+
+    $tabla = "";
+
+    if($total>=1 && $pagina<=$numeroPaginas){
+        $contador   = $inicio+1;
+        $pag_inicio = $inicio+1;
+
+        foreach($datos as $rows){
+            /* ─── etiqueta de stock (rojo para 0, amarillo para 1) ─── */
+            $tagStock = ($rows['producto_stock_total']==0)
+              ? '<span class="tag is-danger is-light"><i class="fas fa-times-circle"></i>&nbsp; 0</span>'
+              : '<span class="tag is-warning is-light"><i class="fas fa-exclamation-triangle"></i>&nbsp; 1</span>';
+
+            $tabla.='
+            <article class="media pb-3 pt-3">
+                <figure class="media-left">
+                    <p class="image is-64x64">';
+                        $ruta="./app/views/productos/".$rows['producto_foto'];
+                        $tabla.= is_file($ruta)
+                           ? '<img src="'.APP_URL.'app/views/productos/'.$rows['producto_foto'].'">'
+                           : '<img src="'.APP_URL.'app/views/productos/default.png">';
+            $tabla.='</p>
+                </figure>
+
+                <div class="media-content">
+                    <div class="content">
+                        <p>
+                            <strong>'.$contador.' - '.$rows['producto_nombre'].'</strong><br>
+                            <strong>CODIGO:</strong> '.$rows['producto_codigo'].', 
+                            <strong>CATEGORIA:</strong> '.$rows['categoria_nombre'].', 
+                            <strong>STOCK:</strong> '.$tagStock.'
+                        </p>
+                    </div>
+
+                    <div class="has-text-right">
+                        <a href="'.APP_URL.'productPhoto/'.$rows['producto_id'].'/"
+                           class="button is-info is-rounded is-small">
+                            <i class="far fa-image fa-fw"></i>
+                        </a>
+
+                        <a href="'.APP_URL.'productUpdate/'.$rows['producto_id'].'/"
+                           class="button is-success is-rounded is-small">
+                           <i class="fas fa-sync fa-fw"></i>
+                        </a>
+
+                        <!-- Botón eliminar -->
+                        <form class="FormularioAjax is-inline-block"
+                              action="'.APP_URL.'app/ajax/productoAjax.php"
+                              method="POST" autocomplete="off">
+                            <input type="hidden" name="modulo_producto" value="eliminar">
+                            <input type="hidden" name="producto_id" value="'.$rows['producto_id'].'">
+                            <button type="submit" class="button is-danger is-rounded is-small">
+                                <i class="far fa-trash-alt fa-fw"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+            <hr>';
+            $contador++;
+        }
+        $pag_final = $contador-1;
+
+        /* ─── paginación ─── */
+        $tabla .= '<p class="has-text-right">
+                     Mostrando productos <strong>'.$pag_inicio.'</strong> al 
+                     <strong>'.$pag_final.'</strong> de un <strong>total de '.$total.'</strong>
+                   </p>';
+        $tabla .= $this->paginadorTablas($pagina,$numeroPaginas,$url,7);
+    }else{
+        $tabla .= '<p class="has-text-centered">No hay productos con stock 0 o 1.</p>';
+    }
+
+    return $tabla;
+}
+
+public function hayProductosCriticos() {
+    $consulta = "SELECT COUNT(producto_id) FROM producto WHERE producto_stock_total <= 1";
+    $total = (int)$this->ejecutarConsulta($consulta)->fetchColumn();
+    return $total > 0;
+}
+
+public function listarNombresStockCritico() {
+    $consulta = "SELECT producto_nombre, producto_stock_total FROM producto WHERE producto_stock_total <= 1 ORDER BY producto_nombre ASC";
+    $datos = $this->ejecutarConsulta($consulta)->fetchAll();
+
+    if (count($datos) > 0) {
+        $html = "<ul style='padding-left: 1rem;'>";
+        foreach ($datos as $row) {
+            $stock = (int)$row['producto_stock_total'];
+            $color = ($stock === 0) ? "has-text-danger" : "has-text-warning";
+            $icon = ($stock === 0) ? "fas fa-times-circle" : "fas fa-exclamation-triangle";
+            $html .= "<li class='{$color}'>
+                        <i class='{$icon}'></i> 
+                        <strong>{$row['producto_nombre']}</strong> 
+                        &nbsp;(Stock: {$stock})
+                      </li>";
+        }
+        $html .= "</ul>";
+    } else {
+        $html = "<p class='has-text-centered'>No hay productos con stock crítico.</p>";
+    }
+
+    return $html;
+}
+
+public function listarNombresStockCriticoPaginado($pagina, $registros, $vista) {
+    $pagina     = $this->limpiarCadena($pagina);
+    $registros  = $this->limpiarCadena($registros);
+    $vista      = $this->limpiarCadena($vista);
+
+    $pagina     = (isset($pagina) && $pagina > 0) ? (int)$pagina : 1;
+    $inicio     = ($pagina > 0) ? (($pagina * $registros) - $registros) : 0;
+
+    // Consulta de datos
+    $consulta_datos = "SELECT producto_nombre, producto_stock_total 
+                       FROM producto 
+                       WHERE producto_stock_total <= 1 
+                       ORDER BY producto_nombre ASC 
+                       LIMIT $inicio, $registros";
+
+    // Total de productos críticos
+    $consulta_total = "SELECT COUNT(producto_id) 
+                       FROM producto 
+                       WHERE producto_stock_total <= 1";
+
+    $datos  = $this->ejecutarConsulta($consulta_datos)->fetchAll();
+    $total  = (int)$this->ejecutarConsulta($consulta_total)->fetchColumn();
+    $numeroPaginas = ceil($total / $registros);
+
+    $html = "";
+
+    if ($total >= 1 && $pagina <= $numeroPaginas) {
+        $html .= "<ul style='padding-left: 1rem;'>";
+        foreach ($datos as $row) {
+            $stock = (int)$row['producto_stock_total'];
+            $color = ($stock === 0) ? "has-text-danger" : "has-text-warning";
+            $icon  = ($stock === 0) ? "fas fa-times-circle" : "fas fa-exclamation-triangle";
+
+            $html .= "<li class='{$color}'>
+                        <i class='{$icon}'></i> 
+                        <strong>{$row['producto_nombre']}</strong> 
+                        &nbsp;(Stock: {$stock})
+                      </li>";
+        }
+        $html .= "</ul>";
+
+        // Paginación
+        $html .= "<div style='margin-top:10px; text-align:center;'>";
+        $baseUrl = APP_URL . "?views={$vista}";
+
+        if ($pagina > 1) {
+            $html .= "<a href='{$baseUrl}&page=" . ($pagina - 1) . "' class='button is-small is-light'>« Anterior</a> ";
+        }
+        if ($pagina < $numeroPaginas) {
+            $html .= "<a href='{$baseUrl}&page=" . ($pagina + 1) . "' class='button is-small is-light'>Siguiente »</a>";
+        }
+        $html .= "</div>";
+
+    } else {
+        $html .= "<p class='has-text-centered'>No hay productos con stock crítico.</p>";
+    }
+
+    return $html;
+}
+
+
 	}

@@ -1081,32 +1081,94 @@
 		}
 
 		
-public function obtenerDatosVentasTotalesPorMes()
+public function obtenerDatosVentasTotalesPorMes(): array
 {
-    $sql = "SELECT venta_fecha, venta_total FROM venta";
-    $ventas = $this->ejecutarConsulta($sql);
+    /* ① Agrupo por año‑mes con DATE_FORMAT ② Ordeno cronológicamente */
+    $sql = "
+        SELECT DATE_FORMAT(venta_fecha, '%Y-%m') AS periodo,
+               SUM(venta_total)                AS total
+        FROM   venta
+        GROUP  BY periodo
+        ORDER  BY periodo
+    ";
 
-    $ventasPorMes = [];
+    $stmt   = $this->ejecutarConsulta($sql);
+    $meses  = [];
+    $totales= [];
 
-    while ($row = $ventas->fetch(\PDO::FETCH_ASSOC)) {
-        $mes = date("F", strtotime($row['venta_fecha']));
-        $total = (float) $row['venta_total'];
-
-        if (!isset($ventasPorMes[$mes])) {
-            $ventasPorMes[$mes] = 0;
-        }
-
-        $ventasPorMes[$mes] += $total;
+    /* ③ Convierto %Y‑%m a nombre de mes español */
+    setlocale(LC_TIME, 'es_ES.UTF-8');  // asegúrate de que el locale exista en tu servidor
+    while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+        // $row['periodo'] viene en “2025-06”
+        $timestamp = strtotime($row['periodo'] . '-01');
+        $meses[]   = strftime('%B', $timestamp);  // “junio”, “julio”, etc.
+        $totales[] = (float)$row['total'];
     }
 
-    ksort($ventasPorMes); // Ordena alfabéticamente (podemos ordenar cronológicamente si quieres)
-
-    return [
-        "meses" => array_keys($ventasPorMes),
-        "totales" => array_values($ventasPorMes)
-    ];
+    return ["meses" => $meses, "totales" => $totales];
 }
 
+/* ════════════ KPIs (cifras grandes) ════════════*/
+public function obtenerKPIs()
+{
+    $sql = "
+        SELECT
+            (SELECT SUM(venta_total) FROM venta)                                        AS total_ventas,
+            (SELECT SUM(venta_total) FROM venta
+               WHERE YEAR(venta_fecha)=YEAR(CURDATE())
+                 AND MONTH(venta_fecha)=MONTH(CURDATE()))                              AS total_mes,
+            (SELECT SUM(venta_total) FROM venta WHERE venta_fecha = CURDATE())          AS total_hoy,
+            (SELECT COUNT(*) FROM producto)                                            AS productos_activos,
+            (SELECT SUM(producto_stock_total) FROM producto)                           AS stock_total
+    ";
+
+    $kpi = $this->ejecutarConsulta($sql)->fetch(\PDO::FETCH_ASSOC);
+
+    // Aseguramos que 'productos_activos' sea un entero
+    $kpi['productos_activos'] = (int) $kpi['productos_activos'];
+
+    return $kpi;
+}
+
+/* ════════════ Ventas por día (últimos 30) ═══════*/
+public function obtenerVentasPorDia(){
+    $sql = "
+        SELECT DATE(venta_fecha) AS fecha,
+               COUNT(*)          AS cantidad
+        FROM   venta
+        WHERE  venta_fecha >= CURDATE() - INTERVAL 29 DAY
+        GROUP  BY fecha
+        ORDER  BY fecha
+    ";
+    return $this->ejecutarConsulta($sql)->fetchAll(\PDO::FETCH_ASSOC);
+}
+
+/* ════════════ Ventas por usuario ════════════════*/
+public function obtenerVentasPorUsuario(){
+    $sql = "
+        SELECT u.usuario_usuario AS usuario,
+               SUM(v.venta_total) AS total
+        FROM   venta v
+        JOIN   usuario u ON v.usuario_id = u.usuario_id
+        GROUP  BY usuario
+        ORDER  BY total DESC
+    ";
+    return $this->ejecutarConsulta($sql)->fetchAll(\PDO::FETCH_ASSOC);
+}
+
+/* ════════════ Top‑5 productos vendidos ══════════*/
+public function obtenerTopProductos(){
+    $sql = "
+        SELECT p.producto_nombre          AS producto,
+               SUM(vd.venta_detalle_cantidad) AS cantidad
+        FROM   venta_detalle vd
+        JOIN   producto p ON vd.producto_id = p.producto_id
+        GROUP  BY vd.producto_id
+        ORDER  BY cantidad DESC
+        LIMIT  5
+    ";
+    return $this->ejecutarConsulta($sql)->fetchAll(\PDO::FETCH_ASSOC);
+}
 
 }
 	

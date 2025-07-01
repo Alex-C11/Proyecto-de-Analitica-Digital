@@ -60,6 +60,16 @@
 								</div>
 							</a>
 						</li>
+						<li class="full-width">
+							<a href="<?php echo APP_URL; ?>productoF/" class="full-width">
+								<div class="navLateral-body-cl">
+									<i class="fas fa-boxes fa-fw"></i>
+								</div>
+								<div class="navLateral-body-cr">
+									Productos Faltantes
+								</div>
+							</a>
+						</li>
 					</ul>
 				</li>
 				
@@ -129,6 +139,16 @@
 								</div>
 								<div class="navLateral-body-cr">
 									Buscar caja
+								</div>
+							</a>
+						</li>
+						<li class="full-width">
+							<a href="<?php echo APP_URL; ?>cajaResumen/" class="full-width">
+								<div class="navLateral-body-cl">
+									<i class="fas fa-chart-line fa-fw"></i>
+								</div>
+								<div class="navLateral-body-cr">
+									Resumen por día
 								</div>
 							</a>
 						</li>

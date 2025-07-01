@@ -57,7 +57,6 @@
 					            $_SESSION['foto']=$check_usuario['usuario_foto'];
 					            $_SESSION['caja']=$check_usuario['caja_id'];
 
-
 					            if(headers_sent()){
 					                echo "<script> window.location.href='".APP_URL."dashboard/'; </script>";
 					            }else{
