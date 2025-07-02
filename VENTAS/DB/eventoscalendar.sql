@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 5.0.2
+-- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 14-07-2021 a las 21:30:11
--- Versión del servidor: 10.4.11-MariaDB
--- Versión de PHP: 7.4.4
+-- Tiempo de generación: 02-07-2025 a las 05:15:42
+-- Versión del servidor: 10.4.32-MariaDB
+-- Versión de PHP: 8.2.12
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -33,16 +33,14 @@ CREATE TABLE `eventoscalendar` (
   `color_evento` varchar(20) DEFAULT NULL,
   `fecha_inicio` varchar(20) DEFAULT NULL,
   `fecha_fin` varchar(20) DEFAULT NULL
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
 
 --
 -- Volcado de datos para la tabla `eventoscalendar`
 --
 
 INSERT INTO `eventoscalendar` (`id`, `evento`, `color_evento`, `fecha_inicio`, `fecha_fin`) VALUES
-(51, 'Mi Primera Prueba', 'teal', '2021-07-07', '2021-07-08'),
-(52, 'Mi Segunda Prueba', 'amber', '2021-07-17', '2021-07-18'),
-(53, 'Mi Tercera Prueba', 'orange', '2021-07-03', '2021-07-04');
+(72, 'Oferta De Julio', '#FF5722', '2025-07-01', '2025-07-09');
 
 --
 -- Índices para tablas volcadas
@@ -62,7 +60,7 @@ ALTER TABLE `eventoscalendar`
 -- AUTO_INCREMENT de la tabla `eventoscalendar`
 --
 ALTER TABLE `eventoscalendar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=73;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
